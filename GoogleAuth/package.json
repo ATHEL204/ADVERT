@@ -1,0 +1,29 @@
+{
+  "name": "storefront-os-auth",
+  "version": "1.0.0",
+  "description": "Authentication service — Google OAuth + Email Verification (no native dependencies)",
+  "main": "auth-server.js",
+  "scripts": {
+    "start": "node auth-server.js",
+    "dev": "nodemon auth-server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.2.0",
+    "google-auth-library": "^9.7.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^8.0.11",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

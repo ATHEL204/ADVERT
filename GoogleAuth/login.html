@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — STOREFRONT OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;600&display=swap">
+
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    /* ── DESIGN TOKENS ─────────────────── */
+    :root {
+      --bg:          #080A0E;
+      --bg-card:     #111620;
+      --bg-elevated: #161D2B;
+      --gold:        #C9A84C;
+      --electric:    #00E5FF;
+      --green:       #00FF88;
+      --red:         #FF3B5C;
+      --text:        #F0EDE6;
+      --text-dim:    #8B929E;
+      --text-muted:  #4A5263;
+      --border:      rgba(255,255,255,0.06);
+      --border-gold: rgba(201,168,76,0.3);
+      --mono:        'Space Mono', monospace;
+      --display:     'Bebas Neue', sans-serif;
+      --body:        'DM Sans', sans-serif;
+      --radius:      6px;
+      --ease:        cubic-bezier(0.4,0,0.2,1);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ────────────────────── */
+    .left-panel {
+      background: linear-gradient(160deg, #0a0d14 0%, #080A0E 100%);
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -100px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,229,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-dot {
+      width: 6px; height: 6px;
+      background: var(--electric);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:.3; transform:scale(.6); }
+    }
+
+    .left-headline {
+      position: relative;
+      z-index: 1;
+    }
+
+    .left-headline h1 {
+      font-family: var(--display);
+      font-size: clamp(56px, 7vw, 88px);
+      line-height: .9;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+    }
+
+    .left-headline h1 span {
+      color: var(--gold);
+      display: block;
+    }
+
+    .left-headline p {
+      color: var(--text-dim);
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 380px;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .feature-icon {
+      width: 32px; height: 32px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+
+    /* ── RIGHT PANEL ───────────────────── */
+    .right-panel {
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      overflow-y: auto;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* ── VIEWS (shown/hidden) ──────────── */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeUp .3s var(--ease); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(12px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── TYPOGRAPHY ────────────────────── */
+    .view-title {
+      font-family: var(--display);
+      font-size: 36px;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .view-subtitle {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 20px; height: 1px;
+      background: var(--text-muted);
+    }
+
+    /* ── GOOGLE BUTTON ─────────────────── */
+    .google-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 13px;
+      background: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--body);
+      font-size: 14px;
+      font-weight: 600;
+      color: #3c4043;
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      position: relative;
+    }
+
+    .google-btn:hover {
+      background: #f8f8f8;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+
+    .google-btn:active { transform: translateY(0); }
+
+    .google-btn svg {
+      width: 18px; height: 18px; flex-shrink: 0;
+    }
+
+    .google-btn.loading {
+      pointer-events: none;
+      opacity: .7;
+    }
+
+    /* ── DIVIDER ───────────────────────── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider span {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    /* ── FORM ──────────────────────────── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    input[type="email"],
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 40px 12px 38px;
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+    }
+
+    input:focus {
+      border-color: rgba(201,168,76,0.5);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+    }
+
+    input.error {
+      border-color: rgba(255,59,92,0.5);
+      box-shadow: 0 0 0 3px rgba(255,59,92,0.06);
+    }
+
+    input::placeholder { color: var(--text-muted); }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .toggle-pw:hover { color: var(--text-dim); }
+
+    /* ── PASSWORD STRENGTH ─────────────── */
+    .pw-strength {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .pw-strength.visible { display: block; }
+
+    .strength-bar {
+      height: 3px;
+      background: var(--bg);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .3s var(--ease), background .3s;
+      width: 0%;
+    }
+
+    .strength-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── FIELD ERROR ───────────────────── */
+    .field-error {
+      font-size: 11px;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error.visible { display: block; }
+
+    /* ── BUTTONS ───────────────────────── */
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold);
+      color: #000;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #D4AF5C;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      padding: 0;
+    }
+
+    .btn-link:hover { color: #D4AF5C; }
+
+    /* ── ALERT BANNER ──────────────────── */
+    .alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .alert.visible { display: flex; gap: 10px; align-items: flex-start; }
+
+    .alert-success {
+      background: rgba(0,255,136,0.06);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: var(--green);
+    }
+
+    .alert-error {
+      background: rgba(255,59,92,0.06);
+      border: 1px solid rgba(255,59,92,0.2);
+      color: var(--red);
+    }
+
+    .alert-info {
+      background: rgba(0,229,255,0.06);
+      border: 1px solid rgba(0,229,255,0.2);
+      color: var(--electric);
+    }
+
+    /* ── SPINNER ───────────────────────── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── FOOTER LINKS ──────────────────── */
+    .view-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+
+    /* ── VERIFY EMAIL VIEW ─────────────── */
+    .verify-icon {
+      width: 64px; height: 64px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    /* ── USER AVATAR (post-login) ──────── */
+    .user-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .user-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--bg);
+      object-fit: cover;
+      border: 2px solid var(--border-gold);
+    }
+
+    .user-avatar-placeholder {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 2px solid var(--border-gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      color: var(--gold);
+      font-family: var(--display);
+    }
+
+    .user-info-name { font-weight: 600; font-size: 15px; }
+
+    .user-info-email {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 2px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* ── CHECKBOX ──────────────────────── */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 16px;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+
+    .checkbox-row label {
+      font-family: var(--body);
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: none;
+      letter-spacing: 0;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* ── RESPONSIVE ────────────────────── */
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     LEFT PANEL
+═══════════════════════════════════════ -->
+<div class="left-panel">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    STOREFRONT OS
+  </div>
+
+  <div class="left-headline">
+    <h1>YOUR<br><span>Commerce</span><br>ENGINE</h1>
+    <p>The merchant-first platform for independent creators and digital commerce — with Web3 settlement built in.</p>
+  </div>
+
+  <div class="feature-list">
+    <div class="feature-item">
+      <div class="feature-icon">🚀</div>
+      <span>Launch a storefront in minutes — no code needed</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">⚡</div>
+      <span>Accept USDC stablecoin settlements in sub-second</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📊</div>
+      <span>Real-time order tracking and merchant dashboard</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🔐</div>
+      <span>Google OAuth + email verification built in</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     RIGHT PANEL
+═══════════════════════════════════════ -->
+<div class="right-panel">
+  <div class="auth-box">
+
+    <!-- ── VIEW: LOGIN ─────────────────── -->
+    <div class="view active" id="view-login">
+      <div class="section-label">Merchant Access</div>
+      <h2 class="view-title">SIGN IN</h2>
+      <p class="view-subtitle">Access your merchant dashboard and storefronts.</p>
+
+      <div class="alert alert-success" id="login-success-alert"></div>
+      <div class="alert alert-error" id="login-error-alert"></div>
+      <div class="alert alert-info" id="login-info-alert"></div>
+
+      <!-- Google Button -->
+      <button class="google-btn" id="google-login-btn" onclick="handleGoogleLogin()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="divider"><span>or sign in with email</span></div>
+
+      <!-- Email/Password Form -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="field-error" id="login-email-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" onclick="togglePw('login-password', this)">👁</button>
+          </div>
+          <div class="field-error" id="login-pw-error"></div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="remember-me">
+          <label for="remember-me">Remember me for 30 days</label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="login-submit-btn">
+          <span>Sign In →</span>
+        </button>
+      </form>
+
+      <div class="view-footer">
+        <button class="btn-link" onclick="showView('view-forgot')">Forgot password?</button><br>
+        Don't have an account?
+        <button class="btn-link" onclick="showView('view-register')">Create one →</button>
+      </div>
+    </div>
+
+    <!-- ── VIEW: REGISTER ──────────────── -->
+    <div class="view" id="view-register">
+      <div class="section-label">New Account</div>
+      <h2 class="view-title">REGISTER</h2>
+      <p class="view-subtitle">Create your merchant account. Free to start.</p>
+
+      <div class="alert alert-error" id="register-error-alert"></div>
+
+      <button class="google-btn" onclick="handleGoogleLogin()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Sign up with Google
+      </button>
+
+      <div class="divider"><span>or sign up with email</span></div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Display Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">✦</span>
+            <input type="text" id="reg-name" placeholder="Your name or store name" autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="field-error" id="reg-email-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="reg-password" placeholder="Min 8 chars, 1 uppercase, 1 number"
+              autocomplete="new-password" required oninput="checkStrength(this.value)">
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-password', this)">👁</button>
+          </div>
+          <div class="pw-strength" id="pw-strength">
+            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+            <span class="strength-label" id="strength-label"></span>
+          </div>
+          <div class="field-error" id="reg-pw-error"></div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="register-submit-btn">
+          <span>Create Account →</span>
+        </button>
+      </form>
+
+      <div class="view-footer">
+        Already have an account?
+        <button class="btn-link" onclick="showView('view-login')">Sign in →</button>
+      </div>
+    </div>
+
+    <!-- ── VIEW: VERIFY EMAIL ───────────── -->
+    <div class="view" id="view-verify">
+      <div class="verify-icon">📬</div>
+      <h2 class="view-title">CHECK YOUR<br>INBOX</h2>
+      <p class="view-subtitle">
+        We sent a verification link to <strong id="verify-email-display" style="color:var(--text);">your email</strong>.
+        Click it to activate your account.
+      </p>
+
+      <div class="alert alert-success" id="resend-success-alert"></div>
+      <div class="alert alert-error" id="resend-error-alert"></div>
+
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;font-size:13px;color:var(--text-dim);line-height:1.6;">
+        ⏱ The link expires in <strong style="color:var(--text);">60 minutes</strong>.<br>
+        Check your spam folder if you don't see it.
+      </div>
+
+      <button class="btn-primary" id="resend-btn" onclick="resendVerification()" style="background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);">
+        Resend verification email
+      </button>
+
+      <div class="view-footer" style="margin-top:16px;">
+        Wrong email? <button class="btn-link" onclick="showView('view-register')">Go back →</button>
+      </div>
+    </div>
+
+    <!-- ── VIEW: FORGOT PASSWORD ────────── -->
+    <div class="view" id="view-forgot">
+      <div class="section-label">Account Recovery</div>
+      <h2 class="view-title">FORGOT<br>PASSWORD</h2>
+      <p class="view-subtitle">Enter your email and we'll send a reset link.</p>
+
+      <div class="alert alert-success" id="forgot-success-alert"></div>
+      <div class="alert alert-error" id="forgot-error-alert"></div>
+
+      <form id="forgot-form" onsubmit="handleForgotPassword(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="forgot-email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="forgot-submit-btn">
+          <span>Send Reset Link →</span>
+        </button>
+      </form>
+
+      <div class="view-footer">
+        <button class="btn-link" onclick="showView('view-login')">← Back to sign in</button>
+      </div>
+    </div>
+
+    <!-- ── VIEW: RESET PASSWORD ─────────── -->
+    <div class="view" id="view-reset">
+      <div class="section-label">New Password</div>
+      <h2 class="view-title">RESET<br>PASSWORD</h2>
+      <p class="view-subtitle">Choose a strong new password for your account.</p>
+
+      <div class="alert alert-error" id="reset-error-alert"></div>
+      <div class="alert alert-success" id="reset-success-alert"></div>
+
+      <form id="reset-form" onsubmit="handleResetPassword(event)">
+        <div class="form-group">
+          <label>New Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="new-password" placeholder="Min 8 chars, 1 uppercase, 1 number"
+              required oninput="checkStrength(this.value, 'reset')">
+            <button type="button" class="toggle-pw" onclick="togglePw('new-password', this)">👁</button>
+          </div>
+          <div class="pw-strength" id="pw-strength-reset">
+            <div class="strength-bar"><div class="strength-fill" id="strength-fill-reset"></div></div>
+            <span class="strength-label" id="strength-label-reset"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="confirm-password" placeholder="Repeat new password" required>
+          </div>
+          <div class="field-error" id="confirm-pw-error"></div>
+        </div>
+        <button type="submit" class="btn-primary" id="reset-submit-btn">
+          <span>Set New Password →</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- ── VIEW: LOGGED IN ──────────────── -->
+    <div class="view" id="view-logged-in">
+      <div class="section-label">Authenticated</div>
+      <h2 class="view-title">WELCOME<br>BACK</h2>
+
+      <div class="user-card" id="user-card">
+        <div class="user-avatar-placeholder" id="user-avatar-placeholder">A</div>
+        <div>
+          <div class="user-info-name" id="user-display-name">Merchant</div>
+          <div class="user-info-email" id="user-display-email">-</div>
+          <div class="verified-badge" id="user-verified-badge">● Verified</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="goToDashboard()" style="margin-bottom:10px;">
+        Open Dashboard →
+      </button>
+
+      <button class="btn-primary" onclick="handleLogout()"
+        style="background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);">
+        Sign Out
+      </button>
+    </div>
+
+  </div><!-- /auth-box -->
+</div><!-- /right-panel -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  AUTH CLIENT — STOREFRONT OS
+//  Connects to auth-server.js on port 3002
+// ═══════════════════════════════════════════════════════════
+
+const AUTH_BASE = 'http://localhost:3005/auth';
+const GOOGLE_CLIENT_ID = '__REPLACE_WITH_YOUR_GOOGLE_CLIENT_ID__';
+// ↑ Replace with your actual Google Client ID from console.cloud.google.com
+
+// ── State ─────────────────────────────────
+const Auth = {
+  user: null,
+  token: null,
+  pendingEmail: null,
+  resetEmail: null,
+  resetToken: null,
+};
+
+// ── Init ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Check for URL params (redirected from OAuth callback or verify)
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('auth') === 'success') {
+    const token = params.get('token');
+    if (token) handleAuthSuccess(token, params.get('newUser') === 'true');
+    return;
+  }
+
+  if (params.get('verified') === 'true') {
+    showView('view-login');
+    showAlert('login-success-alert', '✓ Email verified! You can now sign in.', 'success');
+    return;
+  }
+
+  if (params.get('error')) {
+    showView('view-login');
+    const msgs = {
+      google_denied: 'Google sign-in was cancelled.',
+      google_failed: 'Google sign-in failed. Please try again.',
+      verify_token_expired: 'Verification link has expired. Request a new one below.',
+      invalid_verify_token: 'Invalid verification link.',
+    };
+    showAlert('login-error-alert', msgs[params.get('error')] || 'An error occurred.', 'error');
+    if (params.get('email')) Auth.pendingEmail = params.get('email');
+    return;
+  }
+
+  // Check for reset token in URL
+  if (params.get('token') && params.get('email') && window.location.pathname.includes('reset')) {
+    Auth.resetToken = params.get('token');
+    Auth.resetEmail = params.get('email');
+    showView('view-reset');
+    return;
+  }
+
+  // Check stored token
+  const stored = getStoredToken();
+  if (stored) {
+    validateStoredToken(stored);
+  }
+});
+
+// ── Google Login ───────────────────────────
+function handleGoogleLogin() {
+  // Option A: Redirect flow (server-side OAuth)
+  window.location.href = `${AUTH_BASE}/google`;
+
+  // Option B: Use Google Identity Services JS SDK (uncomment to use):
+  // google.accounts.id.initialize({
+  //   client_id: GOOGLE_CLIENT_ID,
+  //   callback: onGoogleCredential,
+  // });
+  // google.accounts.id.prompt();
+}
+
+async function onGoogleCredential(response) {
+  setLoading('google-login-btn', true);
+  try {
+    const res = await authFetch('/google/verify', { credential: response.credential });
+    handleAuthSuccess(res.accessToken, res.user.isNewUser);
+  } catch (e) {
+    showAlert('login-error-alert', e.message || 'Google sign-in failed', 'error');
+  } finally {
+    setLoading('google-login-btn', false);
+  }
+}
+
+// ── Email Login ────────────────────────────
+async function handleLogin(e) {
+  e.preventDefault();
+  clearAlerts();
+
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!email || !password) return;
+
+  setLoading('login-submit-btn', true);
+
+  try {
+    const res = await authFetch('/login', { email, password });
+    handleAuthSuccess(res.accessToken, false);
+  } catch (err) {
+    if (err.code === 'EMAIL_NOT_VERIFIED') {
+      Auth.pendingEmail = email;
+      showView('view-verify');
+      document.getElementById('verify-email-display').textContent = email;
+    } else {
+      showAlert('login-error-alert', err.message || 'Login failed', 'error');
+      document.getElementById('login-password').value = '';
+    }
+  } finally {
+    setLoading('login-submit-btn', false);
+  }
+}
+
+// ── Register ───────────────────────────────
+async function handleRegister(e) {
+  e.preventDefault();
+  clearAlerts();
+
+  const displayName = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  setLoading('register-submit-btn', true);
+
+  try {
+    await authFetch('/register', { email, password, displayName });
+    Auth.pendingEmail = email;
+    document.getElementById('verify-email-display').textContent = email;
+    showView('view-verify');
+  } catch (err) {
+    showAlert('register-error-alert', err.message || 'Registration failed', 'error');
+  } finally {
+    setLoading('register-submit-btn', false);
+  }
+}
+
+// ── Resend Verification ────────────────────
+async function resendVerification() {
+  const email = Auth.pendingEmail;
+  if (!email) return;
+
+  setLoading('resend-btn', true);
+
+  try {
+    await authFetch('/resend-verification', { email });
+    showAlert('resend-success-alert', `✓ New verification email sent to ${email}`, 'success');
+  } catch (err) {
+    showAlert('resend-error-alert', err.message || 'Failed to resend', 'error');
+  } finally {
+    setLoading('resend-btn', false);
+  }
+}
+
+// ── Forgot Password ────────────────────────
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  clearAlerts();
+
+  const email = document.getElementById('forgot-email').value.trim();
+  setLoading('forgot-submit-btn', true);
+
+  try {
+    await authFetch('/forgot-password', { email });
+    showAlert('forgot-success-alert',
+      `If an account exists for ${email}, a reset link has been sent. Check your inbox.`, 'success');
+    document.getElementById('forgot-email').value = '';
+  } catch {
+    // Always show success to prevent enumeration
+    showAlert('forgot-success-alert',
+      'If an account exists, a reset link has been sent.', 'success');
+  } finally {
+    setLoading('forgot-submit-btn', false);
+  }
+}
+
+// ── Reset Password ─────────────────────────
+async function handleResetPassword(e) {
+  e.preventDefault();
+  clearAlerts();
+
+  const newPassword = document.getElementById('new-password').value;
+  const confirm = document.getElementById('confirm-password').value;
+
+  if (newPassword !== confirm) {
+    const errEl = document.getElementById('confirm-pw-error');
+    errEl.textContent = 'Passwords do not match';
+    errEl.classList.add('visible');
+    return;
+  }
+
+  if (!Auth.resetToken || !Auth.resetEmail) {
+    showAlert('reset-error-alert', 'Invalid reset link. Please request a new one.', 'error');
+    return;
+  }
+
+  setLoading('reset-submit-btn', true);
+
+  try {
+    await authFetch('/reset-password', {
+      token: Auth.resetToken,
+      email: Auth.resetEmail,
+      newPassword,
+    });
+    showAlert('reset-success-alert', '✓ Password reset! Redirecting to sign in...', 'success');
+    setTimeout(() => showView('view-login'), 2000);
+  } catch (err) {
+    showAlert('reset-error-alert', err.message || 'Reset failed', 'error');
+  } finally {
+    setLoading('reset-submit-btn', false);
+  }
+}
+
+// ── Logout ─────────────────────────────────
+async function handleLogout() {
+  try {
+    await authFetch('/logout', {}, 'POST', true);
+  } catch {}
+  clearStoredToken();
+  Auth.user = null;
+  Auth.token = null;
+  showView('view-login');
+  showAlert('login-info-alert', 'You have been signed out.', 'info');
+}
+
+// ── Token validation ───────────────────────
+async function validateStoredToken(token) {
+  try {
+    const res = await fetch(`${AUTH_BASE}/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('invalid');
+    const data = await res.json();
+    Auth.user = data.user;
+    Auth.token = token;
+    showLoggedIn(data.user);
+  } catch {
+    clearStoredToken();
+  }
+}
+
+// ── Auth success handler ───────────────────
+function handleAuthSuccess(token, isNewUser) {
+  Auth.token = token;
+  storeToken(token);
+
+  // Decode JWT payload (no verification — server already did that)
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  Auth.user = {
+    id: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    avatar: payload.avatar,
+    role: payload.role,
+    verified: payload.verified,
+  };
+
+  if (!Auth.user.verified) {
+    Auth.pendingEmail = Auth.user.email;
+    document.getElementById('verify-email-display').textContent = Auth.user.email;
+    showView('view-verify');
+    return;
+  }
+
+  showLoggedIn(Auth.user);
+
+  // Redirect to dashboard after short delay
+  setTimeout(() => goToDashboard(), 1200);
+}
+
+function showLoggedIn(user) {
+  // Update user card
+  document.getElementById('user-display-name').textContent = user.name || user.email;
+  document.getElementById('user-display-email').textContent = user.email;
+  document.getElementById('user-avatar-placeholder').textContent = (user.name || user.email)[0].toUpperCase();
+
+  if (user.avatar) {
+    const img = document.createElement('img');
+    img.src = user.avatar;
+    img.className = 'user-avatar';
+    img.alt = user.name;
+    img.onerror = () => img.remove();
+    document.getElementById('user-avatar-placeholder').replaceWith(img);
+  }
+
+  const badge = document.getElementById('user-verified-badge');
+  badge.textContent = user.verified ? '● Verified' : '● Unverified';
+  badge.style.color = user.verified ? 'var(--green)' : 'var(--red)';
+
+  showView('view-logged-in');
+}
+
+function goToDashboard() {
+  // Redirect to main site with token in URL fragment
+  window.location.href = `/index.html?token=${Auth.token}`;
+}
+
+// ── Utilities ──────────────────────────────
+
+async function authFetch(path, body = {}, method = 'POST', withAuth = false) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (withAuth && Auth.token) headers['Authorization'] = `Bearer ${Auth.token}`;
+
+  const res = await fetch(AUTH_BASE + path, {
+    method,
+    headers,
+    credentials: 'include',
+    body: method !== 'GET' ? JSON.stringify(body) : undefined,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    const err = new Error(data.error || 'Request failed');
+    err.code = data.code;
+    throw err;
+  }
+  return data;
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  clearAlerts();
+  // Clean URL
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+function showAlert(id, message, type = 'success') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message;
+  el.className = `alert alert-${type} visible`;
+}
+
+function clearAlerts() {
+  document.querySelectorAll('.alert').forEach(el => {
+    el.classList.remove('visible');
+    el.textContent = '';
+  });
+  document.querySelectorAll('.field-error').forEach(el => {
+    el.classList.remove('visible');
+    el.textContent = '';
+  });
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.innerHTML = `<div class="spinner"></div> Processing...`;
+  } else {
+    btn.innerHTML = btn.dataset.originalHtml || btn.innerHTML;
+  }
+}
+
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? '🙈' : '👁';
+}
+
+// ── Password Strength ──────────────────────
+function checkStrength(password, suffix = '') {
+  const fillId = suffix ? `strength-fill-${suffix}` : 'strength-fill';
+  const labelId = suffix ? `strength-label-${suffix}` : 'strength-label';
+  const wrapId = suffix ? `pw-strength-${suffix}` : 'pw-strength';
+
+  document.getElementById(wrapId)?.classList.add('visible');
+
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  const configs = [
+    { pct: '20%', color: 'var(--red)', label: 'WEAK' },
+    { pct: '40%', color: 'var(--red)', label: 'WEAK' },
+    { pct: '60%', color: 'var(--gold)', label: 'FAIR' },
+    { pct: '80%', color: 'var(--gold)', label: 'GOOD' },
+    { pct: '100%', color: 'var(--green)', label: 'STRONG' },
+  ];
+
+  const cfg = configs[Math.min(score, 4)];
+  const fill = document.getElementById(fillId);
+  const label = document.getElementById(labelId);
+
+  if (fill) { fill.style.width = cfg.pct; fill.style.background = cfg.color; }
+  if (label) { label.textContent = cfg.label; label.style.color = cfg.color; }
+}
+
+// ── Token Storage ──────────────────────────
+// Uses sessionStorage by default; switches to localStorage if "remember me" checked
+function storeToken(token) {
+  const remember = document.getElementById('remember-me')?.checked;
+  if (remember) {
+    localStorage.setItem('sf_access_token', token);
+  } else {
+    sessionStorage.setItem('sf_access_token', token);
+  }
+}
+
+function getStoredToken() {
+  return localStorage.getItem('sf_access_token') || sessionStorage.getItem('sf_access_token');
+}
+
+function clearStoredToken() {
+  localStorage.removeItem('sf_access_token');
+  sessionStorage.removeItem('sf_access_token');
+}
+</script>
+</body>
+</html>
