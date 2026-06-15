@@ -99,7 +99,7 @@ Add `api.js` to your HTML (before `app.js`):
 |--------|------|-------------|
 | GET | `/api/storefronts/:id/products` | List products (supports `?tags=shonen,figurart&inStock=true`) |
 | POST | `/api/storefronts/:id/products` | Add product |
-| PATCH | `/api/storefronts/:id/products/:pid` | Update product / stock |
+| PATCH | `/api/storefronts/:id/products/:pid` | Update product / stock | 
 
 ### Orders
 | Method | Path | Description |
@@ -223,7 +223,7 @@ client.watchContractEvent({
       const amountUsdc = Number(log.args.value) / 1e6; // USDC has 6 decimals
       broadcastTransaction({ from_addr: log.args.from, amount_usdc: amountUsdc, tx_hash: log.transactionHash });
     });
-  },
+  }, 
 });
 ```
 
