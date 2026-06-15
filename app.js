@@ -199,8 +199,8 @@ function updateNavAuth(loggedIn) {
   } else {
     navRight.innerHTML = `
       <div id="nav-status" class="nav-status" title="Backend status"></div>
-      <a href="GoogleAuth/login.html" class="btn btn-ghost btn-sm">Sign In</a>
-      <a href="GoogleAuth/login.html" class="btn btn-gold btn-sm">Get Started →</a>
+      <a href="login.html" class="btn btn-ghost btn-sm">Sign In</a>
+      <a href="login.html" class="btn btn-gold btn-sm">Get Started →</a>
     `;
   }
 }
